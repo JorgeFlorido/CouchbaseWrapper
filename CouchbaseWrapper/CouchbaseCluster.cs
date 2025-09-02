@@ -1,8 +1,9 @@
 ﻿using Couchbase;
+using CouchbaseWrapper.Interfaces;
 
 namespace CouchbaseWrapper
 {
-  internal sealed class CouchbaseCluster : IAsyncDisposable
+  internal sealed class CouchbaseCluster : ICouchbaseCluster
   {
     private readonly Lazy<Task<ICluster>> _cluster;
 

@@ -2,7 +2,7 @@
 
 namespace CouchbaseWrapper.Interfaces
 {
-  public interface ICouchbaseBucket
+  public interface ICouchbaseBucket : IAsyncDisposable
   {
     Task<IBucket> GetBucketAsync();
   }

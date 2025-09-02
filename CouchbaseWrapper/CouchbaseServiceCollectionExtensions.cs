@@ -19,6 +19,8 @@ namespace CouchbaseWrapper
       services.AddSingleton(cluster);
       services.AddSingleton<ICouchbaseBucket>(bucket);
 
+      services.AddScoped<ICouchbaseRepository, CouchbaseRepository>();
+
       return services;
     }
 

@@ -7,7 +7,7 @@ namespace CouchbaseWrapper
   {
     private readonly Lazy<Task<IBucket>> _bucket;
 
-    public CouchbaseBucket(CouchbaseCluster cluster, CouchbaseOptions options)
+    public CouchbaseBucket(ICouchbaseCluster cluster, CouchbaseOptions options)
     {
       _bucket = new Lazy<Task<IBucket>>(async () =>
       {

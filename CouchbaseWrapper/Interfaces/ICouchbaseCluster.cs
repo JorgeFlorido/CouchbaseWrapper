@@ -1,7 +1,9 @@
-﻿namespace CouchbaseWrapper.Interfaces
+﻿using Couchbase;
+
+namespace CouchbaseWrapper.Interfaces
 {
   internal interface ICouchbaseCluster : IAsyncDisposable
   {
-    Task<ICouchbaseBucket> GetBucketAsync();
+    Task<ICluster> GetClusterAsync();
   }
 }
