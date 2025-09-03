@@ -1,4 +1,5 @@
 ﻿using Couchbase.Core.Exceptions.KeyValue;
+using Couchbase.KeyValue;
 using CouchbaseWrapper.Interfaces;
 
 namespace CouchbaseWrapper
@@ -9,27 +10,58 @@ namespace CouchbaseWrapper
 
     public CouchbaseRepository(ICouchbaseBucket bucket) => _bucket = bucket;
 
-    public async Task<T?> GetAsync<T>(string id)
-    {
-      var bucket = await _bucket.GetBucketAsync();
-      var collection = bucket.DefaultCollection();
+    public Task<T?> GetAsync<T>(string id, CancellationToken ct = default) =>
+        ExecuteAsync(async (c, t) =>
+        {
+          try
+          {
+            var r = await c.GetAsync(id, o => o.CancellationToken(t));
+            return r.ContentAs<T>();
+          }
+          catch (DocumentNotFoundException)
+          {
+            return default;
+          }
+        }, ct);
 
+    public Task UpsertAsync(string id, object value, CancellationToken ct = default) =>
+        ExecuteAsync((c, t) => c.UpsertAsync(id, value, o => o.CancellationToken(t)), ct);
+
+    public Task InsertAsync(string id, object value, CancellationToken ct = default) =>
+        ExecuteAsync((c, t) => c.InsertAsync(id, value, o => o.CancellationToken(t)), ct);
+
+    public Task ReplaceAsync(string id, object value, CancellationToken ct = default) =>
+        ExecuteAsync((c, t) => c.ReplaceAsync(id, value, o => o.CancellationToken(t)), ct);
+
+    public Task RemoveAsync(string id, CancellationToken ct = default) =>
+        ExecuteAsync((c, t) => c.RemoveAsync(id, o => o.CancellationToken(t)), ct);
+
+    public Task<bool> ExistsAsync(string id, CancellationToken ct = default) =>
+        ExecuteAsync(async (c, t) =>
+        {
+          var r = await c.ExistsAsync(id, o => o.CancellationToken(t));
+          return r.Exists;
+        }, ct);
+
+    private async Task<TResult> ExecuteAsync<TResult>(
+        Func<ICouchbaseCollection, CancellationToken, Task<TResult>> op,
+        CancellationToken ct)
+    {
       try
       {
-        var result = await collection.GetAsync(id);
-        return result.ContentAs<T>();
+        var bucket = await _bucket.GetBucketAsync();
+        var collection = bucket.DefaultCollection();
+        return await op(collection, ct);
       }
-      catch (DocumentNotFoundException)
+      catch (Exception ex)
       {
-        return default;
+        throw new CouchbaseRepositoryException("Couchbase operation failed.", ex);
       }
     }
 
-    public async Task UpsertAsync(string id, object value)
-    {
-      var bucket = await _bucket.GetBucketAsync();
-      var collection = bucket.DefaultCollection();
-      await collection.UpsertAsync(id, value);
-    }
+    private Task ExecuteAsync(
+        Func<ICouchbaseCollection, CancellationToken, Task> op,
+        CancellationToken ct) =>
+        ExecuteAsync<object?>(async (c, t) => { await op(c, t); return null; }, ct);
   }
 }
