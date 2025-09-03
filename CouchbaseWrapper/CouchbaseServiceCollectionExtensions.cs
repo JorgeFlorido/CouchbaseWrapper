@@ -1,6 +1,7 @@
 ﻿using CouchbaseWrapper.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using System.Text.RegularExpressions;
 
 namespace CouchbaseWrapper
 {
@@ -26,13 +27,26 @@ namespace CouchbaseWrapper
 
     private static void ValidateOptions(CouchbaseOptions options)
     {
-      if (string.IsNullOrWhiteSpace(options.ConnectionString) ||
-          string.IsNullOrWhiteSpace(options.Username) ||
-          string.IsNullOrWhiteSpace(options.Password) ||
-          string.IsNullOrWhiteSpace(options.BucketName))
-      {
-        throw new InvalidOperationException("Couchbase configuration is missing or invalid.");
-      }
+      if (string.IsNullOrWhiteSpace(options.ConnectionString))
+        throw new InvalidOperationException("Couchbase ConnectionString is required.");
+      
+      if (!Uri.TryCreate(options.ConnectionString, UriKind.Absolute, out _))
+        throw new InvalidOperationException("Couchbase ConnectionString must be a valid URI.");
+      
+      if (string.IsNullOrWhiteSpace(options.Username))
+        throw new InvalidOperationException("Couchbase Username is required.");
+      
+      if (string.IsNullOrWhiteSpace(options.Password))
+        throw new InvalidOperationException("Couchbase Password is required.");
+      
+      if (string.IsNullOrWhiteSpace(options.BucketName))
+        throw new InvalidOperationException("Couchbase BucketName is required.");
+      
+      if (options.BucketName.Length > 100)
+        throw new InvalidOperationException("Couchbase BucketName cannot exceed 100 characters.");
+      
+      if (!Regex.IsMatch(options.BucketName, @"^[a-zA-Z0-9_-]+$"))
+        throw new InvalidOperationException("Couchbase BucketName can only contain letters, numbers, underscores, and hyphens.");
     }
   }
 }
