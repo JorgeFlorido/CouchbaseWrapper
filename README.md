@@ -1,4 +1,4 @@
-﻿# Couchbase Wrapper for .NET
+# Couchbase Wrapper for .NET
 
 A lightweight and opinionated wrapper around the official [Couchbase .NET SDK](https://docs.couchbase.com/dotnet-sdk/current/hello-world/start-using-sdk.html), designed for clean integration with ASP.NET Core applications.
 
